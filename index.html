@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Armageddon Scanner</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#070A10">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Armageddon">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+  :root{
+    --bg:#08090D; --panel:#0E0F16; --panel-2:#12141C; --line:#232838;
+    --cyan:#2F8CFF; --violet:#FF3B5C; --amber:#FFB020; --red:#FF3B5C;
+    --blue:#2F8CFF; --blue-glow:rgba(47,140,255,0.25); --red-glow:rgba(255,59,92,0.25);
+    --text:#E9EEF5; --muted:#7C8AA8;
+    --mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+    --disp:'Space Grotesk','Inter',sans-serif; --body:'Inter',sans-serif;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);}
+  body{
+    background:
+      repeating-linear-gradient(115deg, rgba(47,140,255,0.025) 0px, rgba(47,140,255,0.025) 1px, transparent 1px, transparent 64px),
+      radial-gradient(ellipse at 15% -10%, rgba(47,140,255,0.14), transparent 45%),
+      radial-gradient(ellipse at 90% 5%, rgba(255,59,92,0.12), transparent 42%),
+      var(--bg);
+    min-height:100vh;
+  }
+  ::selection{background:rgba(47,140,255,0.35);}
+  .app{max-width:1180px;margin:0 auto;padding:20px 20px 60px;}
+
+  header{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:6px 0 22px;border-bottom:1px solid var(--line);margin-bottom:22px;flex-wrap:wrap;}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--blue),var(--red));box-shadow:0 0 12px var(--blue-glow),0 0 12px var(--red-glow);}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand h1{font-family:var(--disp);font-size:20px;letter-spacing:0.02em;margin:0;font-weight:700;}
+  .brand .tag{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
+  .status-pill{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:20px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+  .dot.live{background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:18px;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+  .panel{position:relative;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:18px 18px 18px 21px;overflow:hidden;}
+  .panel::before{content:"";position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--blue),var(--red));opacity:0.75;}
+  .panel + .panel{margin-top:18px;}
+  .panel h2{font-family:var(--disp);font-size:13px;text-transform:uppercase;letter-spacing:0.09em;color:var(--muted);margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .panel h2 .n{color:var(--cyan);}
+
+  label{display:block;font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+  input[type=text],input[type=password],input[type=number],input[type=datetime-local],select{
+    width:100%;background:#0A0F17;border:1px solid var(--line);color:var(--text);
+    padding:10px 11px;border-radius:8px;font-family:var(--mono);font-size:13px;margin-bottom:12px;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--cyan);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:12px;line-height:1.5;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .toggle-row label{margin:0;}
+  .switch{position:relative;width:38px;height:22px;flex:none;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;inset:0;background:#1C2534;border-radius:22px;cursor:pointer;transition:.15s;}
+  .slider:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.15s;}
+  input:checked + .slider{background:rgba(47,140,255,0.2);border:1px solid var(--cyan);}
+  input:checked + .slider:before{transform:translateX(16px);background:var(--cyan);}
+
+  .style-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px;}
+  .style-btn{background:#0A0F17;border:1px solid var(--line);color:var(--muted);padding:10px 6px;border-radius:9px;font-size:11px;font-family:var(--body);font-weight:600;cursor:pointer;text-align:center;transition:all .15s;}
+  .style-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(47,140,255,0.07);}
+  .style-btn small{display:block;font-weight:400;font-size:9.5px;color:var(--muted);margin-top:2px;font-family:var(--mono);}
+  .style-btn.active small{color:rgba(47,140,255,0.7);}
+
+  .strat-list{display:flex;flex-direction:column;gap:6px;}
+  .strat-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;background:#0A0F17;border:1px solid var(--line);font-size:11.5px;}
+  .strat-chip b{font-weight:600;}
+  .strat-chip small{color:var(--muted);font-family:var(--mono);font-size:10px;display:block;}
+
+  .btn{width:100%;padding:13px;border-radius:9px;border:none;font-family:var(--disp);font-weight:700;font-size:13.5px;letter-spacing:0.02em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .1s, box-shadow .15s;}
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:linear-gradient(90deg,var(--blue),var(--red));color:#04070D;box-shadow:0 0 22px rgba(47,140,255,0.25);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);}
+  .btn-primary:hover{box-shadow:0 0 30px rgba(47,140,255,0.35),0 0 30px rgba(255,59,92,0.25);}
+  .btn-ghost{background:#0A0F17;color:var(--text);border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:#33415A;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:8px;}
+
+  #chartWrap{position:relative;background:#0A0F17;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  canvas{display:block;width:100%;}
+  .chart-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+  .chart-meta .px{font-family:var(--mono);font-size:26px;font-weight:700;}
+  .chart-meta .sym{font-family:var(--disp);font-size:15px;color:var(--muted);}
+  .scanning-overlay{position:absolute;inset:0;background:rgba(7,10,16,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;backdrop-filter:blur(2px);padding:16px;text-align:center;}
+  .scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 12px var(--cyan);animation:scan 1.6s linear infinite;}
+  @keyframes scan{0%{top:0;}100%{top:100%;}}
+  .scan-txt{font-family:var(--mono);font-size:12px;color:var(--cyan);letter-spacing:0.08em;}
+
+  .signal-card{border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:16px;background:#0A0F17;}
+  .signal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .dir-badge{font-family:var(--disp);font-weight:700;font-size:16px;padding:6px 14px;border-radius:8px;letter-spacing:0.03em;}
+  .dir-buy{background:rgba(47,140,255,0.13);color:var(--cyan);border:1px solid rgba(47,140,255,0.4);}
+  .dir-sell{background:rgba(255,84,112,0.13);color:var(--red);border:1px solid rgba(255,84,112,0.4);}
+  .dir-none{background:rgba(124,138,160,0.13);color:var(--muted);border:1px solid var(--line);}
+  .conf-wrap{display:flex;align-items:center;gap:10px;}
+  .conf-num{font-family:var(--mono);font-size:22px;font-weight:700;}
+  .conf-label{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;}
+
+  .badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .badge{font-family:var(--mono);font-size:10.5px;padding:5px 10px;border-radius:20px;border:1px solid var(--line);color:var(--muted);background:var(--panel);}
+  .badge.up{color:var(--cyan);border-color:rgba(47,140,255,0.4);}
+  .badge.down{color:var(--red);border-color:rgba(255,84,112,0.4);}
+  .badge.warn{color:var(--amber);border-color:rgba(255,176,32,0.4);}
+
+  .levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0;}
+  @media(max-width:560px){.levels{grid-template-columns:1fr 1fr;}}
+  .lvl{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;}
+  .lvl .l{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;}
+  .lvl .v{font-family:var(--mono);font-size:15px;font-weight:700;margin-top:4px;}
+  .lvl.entry .v{color:var(--text);}
+  .lvl.sl .v{color:var(--red);}
+  .lvl.tp .v{color:var(--cyan);}
+
+  .bd-group{margin-top:14px;}
+  .bd-group .tf-label{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:10px 0 6px;}
+  .confluences{display:flex;flex-direction:column;gap:6px;}
+  .cf-row{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:6px 8px;border-radius:6px;}
+  .cf-row.pass-up{background:rgba(47,140,255,0.06);}
+  .cf-row.pass-down{background:rgba(255,84,112,0.06);}
+  .cf-icon{width:16px;height:16px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+  .cf-icon.up{background:var(--cyan);color:#00201B;}
+  .cf-icon.down{background:var(--red);color:#2B000B;}
+  .cf-icon.flat{background:var(--line);color:var(--muted);}
+  .cf-row.flat{color:var(--muted);}
+
+  .notes{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.6;border-top:1px dashed var(--line);padding-top:12px;}
+
+  .risk-out{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;}
+  @media(max-width:560px){.risk-out{grid-template-columns:1fr 1fr;}}
+  .risk-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;}
+  .risk-box .l{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;}
+  .risk-box .v{font-family:var(--mono);font-size:16px;font-weight:700;margin-top:4px;}
+
+  .drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:all .15s;}
+  .drop:hover{border-color:var(--cyan);background:rgba(47,140,255,0.03);}
+  .drop img{max-width:100%;max-height:220px;border-radius:8px;margin-top:10px;}
+  .drop p{margin:0;font-size:12px;color:var(--muted);}
+
+  .lock-banner{display:flex;align-items:center;gap:10px;background:rgba(255,176,32,0.08);border:1px solid rgba(255,176,32,0.35);color:var(--amber);padding:10px 12px;border-radius:8px;font-size:12px;margin-bottom:14px;}
+  .tier-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+  .tier{border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .tier b{display:block;color:var(--text);font-family:var(--disp);font-size:13px;margin-bottom:3px;}
+
+  .warn-box{background:rgba(255,84,112,0.06);border:1px solid rgba(255,84,112,0.3);border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.6;color:#F0B8C4;}
+  .warn-box b{color:var(--red);}
+  footer{margin-top:26px;text-align:center;font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+  .voice-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#0A0F17;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;}
+  .voice-btn.on{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 12px rgba(47,140,255,0.35);}
+  .icon-row{display:flex;gap:8px;align-items:center;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+        <rect x="1" y="1" width="40" height="40" rx="10" fill="#0A0F17" stroke="#1C2534"/>
+        <path d="M8 30 L8 20 L13 25 L13 14 L18 20 L18 30" stroke="#2F8CFF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="24" y="22" width="3" height="8" fill="#FF3B5C"/>
+        <rect x="24" y="16" width="3" height="5" fill="#FF3B5C" opacity="0.5"/>
+        <rect x="30" y="14" width="3" height="16" fill="#FF3B5C"/>
+        <rect x="30" y="10" width="3" height="3" fill="#FF3B5C" opacity="0.5"/>
+      </svg>
+      <div>
+        <h1>ARMAGEDDON <span style="color:var(--cyan)">SCANNER</span></h1>
+        <div class="tag">Confluence Engine · Analysis Only, No Auto-Trading</div>
+      </div>
+    </div>
+    <div class="icon-row">
+      <div class="status-pill"><span class="dot" id="liveDot"></span><span id="liveStatus">No feed connected</span></div>
+      <button class="voice-btn" id="voiceToggle" title="Voice control">MIC</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2><span class="n">01</span> Data Source</h2>
+        <label>Market Data API Key (Twelve Data)</label>
+        <input type="password" id="apiKey" placeholder="Paste your twelvedata.com API key">
+        <div class="hint">Free key at twelvedata.com. Used only in your browser to pull real OHLC candles — never stored or sent anywhere else. The engine fetches multiple timeframes per scan (H4/H1 always, plus your style's set) — free-tier rate limits apply.</div>
+        <label>Trading Style</label>
+        <div class="style-btns" id="styleBtns"></div>
+        <div class="hint">Style picks the exact timeframe set and strategy routing Armageddon itself uses — same asset-class logic (Forex/Metals/Indices/Crypto/Synthetic) as the EA. Pick your instrument up at the top of the chart panel, on the right →</div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="n">02</span> Confluence Engine</h2>
+        <label>Min. Agreeing Votes (InpMinConfluence)</label>
+        <input type="number" id="minConfluence" value="2" min="1" max="8">
+        <div class="toggle-row">
+          <label style="margin:0;">Shadow Hunter / Zero Float override</label>
+          <label class="switch"><input type="checkbox" id="requireShadow" checked><span class="slider"></span></label>
+        </div>
+        <div class="hint" style="margin-top:-4px;">Active strategies for the selected style/asset class:</div>
+        <div class="strat-list" id="stratList"></div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="n">03</span> News Mode</h2>
+        <div class="toggle-row">
+          <label style="margin:0;">Enable (Sig_NewsBreakout)</label>
+          <label class="switch"><input type="checkbox" id="newsEnabled"><span class="slider"></span></label>
+        </div>
+        <div id="newsFields">
+          <label>Release Time (your local time)</label>
+          <input type="datetime-local" id="newsTime">
+          <label>Currency Code (e.g. USD)</label>
+          <input type="text" id="newsCurrency" value="USD" maxlength="3">
+          <div class="row3">
+            <div><label>Window Before (min)</label><input type="number" id="newsBefore" value="15"></div>
+            <div><label>Window After (min)</label><input type="number" id="newsAfter" value="30"></div>
+            <div><label>Entry Delay (sec)</label><input type="number" id="newsDelay" value="60"></div>
+          </div>
+          <label>Breakout Buffer (points)</label>
+          <input type="number" id="newsBuffer" value="50">
+          <div class="hint">Mirrors the EA's tuned news logic: stands aside before the release, waits out the entry delay after it, requires a buffered M1 range break, and only scans this symbol against this exact release once per session.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="n">04</span> Risk Management</h2>
+        <div class="row2">
+          <div><label>Account Balance ($)</label><input type="number" id="balance" value="1000"></div>
+          <div><label>Risk per Trade (%)</label><input type="number" id="riskPct" value="1" step="0.25"></div>
+        </div>
+        <label>Your Intended Lot Size</label>
+        <input type="number" id="myLotSize" value="0.10" step="0.01" min="0">
+        <div class="hint">Set the lot size you actually plan to use — the signal will show exactly how much that size risks in $ and %, next to the suggested size from your risk %.</div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="n">05</span> Screenshot Analysis</h2>
+        <label>Anthropic API Key</label>
+        <input type="password" id="anthropicKey" placeholder="Paste your console.anthropic.com API key">
+        <div class="hint">Get a key at console.anthropic.com — kept in your browser only, sent straight to Anthropic. Unlike the Twelve Data key, each analysis here costs a small amount on your Anthropic account (pay-as-you-go), since it's a real Claude API call.</div>
+        <label>Strategy to read visually</label>
+        <select id="screenshotStrategy"></select>
+        <div class="drop" id="dropZone" style="margin-top:10px;">
+          <p>Click to upload a chart screenshot<br>AI will read structure using the selected strategy</p>
+          <input type="file" id="fileInput" accept="image/*" style="display:none">
+          <img id="preview" style="display:none;">
+        </div>
+        <button class="btn btn-primary" style="margin-top:10px;" id="scanImgBtn" disabled>Analyze Screenshot</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <label>Instrument</label>
+        <select id="symbol">
+          <optgroup label="Currencies">
+            <option value="EUR/USD">EUR/USD</option>
+            <option value="GBP/USD">GBP/USD</option>
+            <option value="USD/JPY">USD/JPY</option>
+            <option value="USD/CHF">USD/CHF</option>
+            <option value="AUD/USD">AUD/USD</option>
+            <option value="USD/CAD">USD/CAD</option>
+            <option value="NZD/USD">NZD/USD</option>
+            <option value="EUR/GBP">EUR/GBP</option>
+            <option value="EUR/JPY">EUR/JPY</option>
+            <option value="GBP/JPY">GBP/JPY</option>
+          </optgroup>
+          <optgroup label="Metals">
+            <option value="XAU/USD">XAU/USD (Gold)</option>
+            <option value="XAG/USD">XAG/USD (Silver)</option>
+          </optgroup>
+          <optgroup label="Indices (availability depends on your data plan)">
+            <option value="DJI">US30 - Dow Jones</option>
+            <option value="IXIC">US100 - Nasdaq</option>
+            <option value="GSPC">US500 - S&amp;P 500</option>
+            <option value="UKX">UK100 - FTSE 100</option>
+            <option value="GDAXI">GER40 - DAX</option>
+            <option value="N225">JPN225 - Nikkei 225</option>
+            <option value="AXJO">AUS200 - ASX 200</option>
+          </optgroup>
+          <optgroup label="Crypto">
+            <option value="BTC/USD">BTC/USD</option>
+            <option value="ETH/USD">ETH/USD</option>
+          </optgroup>
+          <optgroup label="Synthetics - no live feed, use Screenshot Analysis">
+            <option value="" disabled>Volatility 10/25/50/75/100 Index</option>
+            <option value="" disabled>Boom 500/1000 Index</option>
+            <option value="" disabled>Crash 500/1000 Index</option>
+            <option value="" disabled>Jump 10/25/50/75/100 Index</option>
+          </optgroup>
+        </select>
+        <div class="chart-meta">
+          <div><span class="sym" id="symLabel">EUR/USD · —</span></div>
+          <div class="px" id="pxLabel">—</div>
+        </div>
+        <div id="chartWrap">
+          <canvas id="chart" width="800" height="360"></canvas>
+          <div class="scanning-overlay" id="scanOverlay" style="display:none;">
+            <div class="scan-line"></div>
+            <div class="scan-txt" id="scanTxt">RUNNING STRUCTURE ANALYSIS…</div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" id="scanBtn" onclick="runLiveScan()">Scan Live Chart</button>
+          <button class="btn btn-ghost" id="autoBtn" onclick="toggleAutoScan()" style="max-width:150px;">Auto-Scan: Off</button>
+        </div>
+      </div>
+
+      <div id="signalArea"></div>
+
+      <div class="panel" style="margin-top:18px;">
+        <h2>Execution</h2>
+        <div class="warn-box">
+          <b>Analysis only, on purpose.</b> This scanner never places trades. If a signal here matches what you want to act on, execute it yourself, or run it through the Armageddon Forex Robot EA (the auto-trading counterpart in Mokai Traders Hub) which applies the same engine plus spread/session/risk gating live on your MT5 account.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Signal Log</h2>
+        <div id="logArea" style="font-family:var(--mono);font-size:11.5px;color:var(--muted);max-height:160px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Armageddon Scanner — structure analysis is probabilistic, not predictive. No output here is financial advice, and no trade is placed automatically. Trade your own risk.
+  </footer>
+</div>
+
+<script>
+//=====================================================================
+// CONFIG — mirrors Armageddon_Trading_Robot.mq5 exactly where possible
+//=====================================================================
+const TF_INTERVAL = {M1:'1min',M5:'5min',M15:'15min',M30:'30min',H1:'1h',H4:'4h',D1:'1day'};
+const TF_OUTPUTSIZE = {M1:130,M5:130,M15:130,M30:130,H1:220,H4:220,D1:130};
+
+const STYLES = {
+  aggressive_scalping: {label:'Aggressive', sub:'Scalping', tfs:['M1'], atrTf:'M15', slMult:1.2, rr:1.3},
+  moderate_scalping:   {label:'Moderate',   sub:'Scalping', tfs:['H4','H1','M30','M15','M5'], atrTf:'M15', slMult:1.8, rr:1.8},
+  swing:                {label:'Swing',      sub:'',         tfs:['H4','H1'], atrTf:'H4', slMult:2.5, rr:2.5}
+};
+let activeStyle = 'moderate_scalping';
+
+const STRAT_META = {
+  smc:               {name:'SMC', desc:'Structure break (BOS) / CHoCH'},
+  trendline_breakout:{name:'Trendline Breakout', desc:'Swing-line break w/ momentum'},
+  crt:               {name:'Candle Range Theory', desc:'H1 liquidity grab reversal'},
+  price_action:      {name:'Price Action', desc:'Engulfing / pin bar at a swing'},
+  supply_demand:     {name:'Supply & Demand', desc:'Base + impulse zone rejection'},
+  shadow_hunter:     {name:'Shadow Hunter / Zero Float', desc:'D1 golden zone + zone rejection'},
+  scalping:          {name:'Scalping Momentum', desc:'M1 EMA cross, M5-confirmed'},
+  news_breakout:     {name:'News Breakout', desc:'Post-release M1 range break'}
+};
+
+// Matches the switch(asset) block in EvaluateSymbol exactly.
+const ASSET_STRATEGY_MAP = {
+  synthetic: ['smc','trendline_breakout'],
+  indices:   ['trendline_breakout','smc','price_action'],
+  crypto:    ['trendline_breakout','smc'],
+  metals:    ['supply_demand','smc','trendline_breakout'],
+  forex:     ['smc','supply_demand','price_action','crt']
+};
+
+const InpConsolidationATR = 0.5, InpImpulseATR = 1.5;
+const InpFibGoldenZoneMin = 0.236, InpFibGoldenZoneMax = 0.5;
+
+let autoTimer = null;
+let voiceOn = false, recognizer = null;
+const newsTradedSet = new Set(); // one-shot per symbol+eventTime, session-scoped
+
+//=====================================================================
+// ASSET CLASSIFICATION — matches GetAssetClass()
+//=====================================================================
+function classifyAsset(symbol){
+  const s = symbol.toUpperCase();
+  if(/XAU|XAG|XPT|XPD|GOLD|SILVER/.test(s)) return 'metals';
+  if(/BTC|ETH|LTC|XRP|SOL/.test(s)) return 'crypto';
+  if(/VOLATILITY|VOL |BOOM|CRASH|JUMP|STEP/.test(s)) return 'synthetic';
+  if(/US30|US100|US500|GER40|UK100|JPN225|AUS200|NAS|SPX|DOW|DJI|IXIC|GSPC|UKX|GDAXI|N225|AXJO/.test(s)) return 'indices';
+  return 'forex';
+}
+function pointSizeFor(symbol){
+  const s = symbol.toUpperCase();
+  if(s.includes('JPY')) return 0.01;
+  if(s.includes('XAU') || s.includes('XAG')) return 0.01;
+  if(classifyAsset(symbol)==='crypto') return 0.1;
+  if(classifyAsset(symbol)==='indices') return 1;
+  return 0.0001;
+}
+
+//=====================================================================
+// UI: style buttons + strategy list
+//=====================================================================
+const styleBtnsEl = document.getElementById('styleBtns');
+Object.entries(STYLES).forEach(([key,s])=>{
+  const b = document.createElement('button');
+  b.className = 'style-btn' + (key===activeStyle?' active':'');
+  b.dataset.key = key;
+  b.innerHTML = `${s.label}${s.sub?`<small>${s.sub}</small>`:''}`;
+  b.onclick = ()=>{ activeStyle = key; document.querySelectorAll('.style-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderStrategyList(); updateSymLabel(); };
+  styleBtnsEl.appendChild(b);
+});
+
+function renderStrategyList(){
+  const el = document.getElementById('stratList');
+  const asset = classifyAsset(document.getElementById('symbol').value);
+  let ids;
+  if(activeStyle==='aggressive_scalping') ids = ['scalping','price_action'];
+  else ids = [...ASSET_STRATEGY_MAP[asset], 'shadow_hunter'];
+  el.innerHTML = ids.map(id=>{
+    const m = STRAT_META[id];
+    return `<div class="strat-chip"><div><b>${m.name}</b><small>${m.desc}</small></div></div>`;
+  }).join('');
+}
+function updateSymLabel(){
+  const symbol = document.getElementById('symbol').value || 'Select a symbol';
+  document.getElementById('symLabel').textContent = symbol + ' · ' + STYLES[activeStyle].label;
+}
+document.getElementById('symbol').addEventListener('change', ()=>{ renderStrategyList(); updateSymLabel(); });
+renderStrategyList();
+updateSymLabel();
+
+// Screenshot strategy dropdown — the 8 real strategies
+const shotSel = document.getElementById('screenshotStrategy');
+Object.entries(STRAT_META).forEach(([id,m])=>{
+  const o = document.createElement('option'); o.value=id; o.textContent=m.name; shotSel.appendChild(o);
+});
+
+document.getElementById('newsEnabled').addEventListener('change', (e)=>{
+  document.getElementById('newsFields').style.opacity = e.target.checked ? '1':'0.4';
+  document.getElementById('newsFields').style.pointerEvents = e.target.checked ? 'auto':'none';
+});
+document.getElementById('newsFields').style.opacity = '0.4';
+document.getElementById('newsFields').style.pointerEvents = 'none';
+
+//=====================================================================
+// DATA FETCH
+//=====================================================================
+async function fetchTFRows(symbol, tfKey){
+  const key = document.getElementById('apiKey').value.trim();
+  if(!key) throw new Error('Enter a Twelve Data API key first.');
+  const interval = TF_INTERVAL[tfKey];
+  const size = TF_OUTPUTSIZE[tfKey];
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${size}&apikey=${encodeURIComponent(key)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if(data.status === 'error' || !data.values){ throw new Error(`[${tfKey}] ${data.message || 'Data provider returned an error.'}`); }
+  return data.values.map(v=>({
+    time: new Date(v.datetime).getTime(),
+    open:+v.open, high:+v.high, low:+v.low, close:+v.close
+  })).reverse(); // ascending: oldest -> newest
+}
+
+//=====================================================================
+// INDICATORS
+//=====================================================================
+function emaSeries(closesAsc, period){
+  const out = Array(closesAsc.length).fill(null);
+  if(closesAsc.length < period) return out;
+  let sum = 0;
+  for(let i=0;i<period;i++) sum += closesAsc[i];
+  out[period-1] = sum/period;
+  const k = 2/(period+1);
+  for(let i=period;i<closesAsc.length;i++) out[i] = closesAsc[i]*k + out[i-1]*(1-k);
+  return out;
+}
+function emaLast(closesAsc, period){
+  const arr = emaSeries(closesAsc, period);
+  return arr[arr.length-1];
+}
+function atrLast(rowsAsc, period=14){
+  if(rowsAsc.length < period+1) return 0;
+  const trs = rowsAsc.map((r,i)=> i===0 ? r.high-r.low : Math.max(r.high-r.low, Math.abs(r.high-rowsAsc[i-1].close), Math.abs(r.low-rowsAsc[i-1].close)));
+  let s=0; for(let i=0;i<period;i++) s+=trs[i];
+  let atr = s/period;
+  for(let i=period;i<trs.length;i++) atr = (atr*(period-1)+trs[i])/period;
+  return atr;
+}
+// 5-bar fractal swings (2 bars each side), most-recent-first, up to 3 — mirrors FindSwings()
+function findFractalSwings(rowsAsc, look=2){
+  const highs=[], lows=[];
+  for(let idx = rowsAsc.length-1-look; idx >= look && (highs.length<3 || lows.length<3); idx--){
+    let isH=true, isL=true;
+    for(let j=idx-look;j<=idx+look;j++){
+      if(j===idx) continue;
+      if(rowsAsc[j].high >= rowsAsc[idx].high) isH=false;
+      if(rowsAsc[j].low  <= rowsAsc[idx].low)  isL=false;
+    }
+    if(isH && highs.length<3) highs.push({price:rowsAsc[idx].high, time:rowsAsc[idx].time});
+    if(isL && lows.length<3)  lows.push({price:rowsAsc[idx].low,  time:rowsAsc[idx].time});
+  }
+  return {highs, lows};
+}
+function seriesGet(rowsAsc, k){ return rowsAsc[rowsAsc.length-1-k]; } // k=0 most recent, mirrors MQL series index
+
+function buildTF(rowsAsc){
+  const {highs, lows} = findFractalSwings(rowsAsc, 2);
+  return { rowsAsc, highs, lows, atr: atrLast(rowsAsc,14), closes: rowsAsc.map(r=>r.close) };
+}
+
+//=====================================================================
+// STRATEGIES — direct ports of the 8 Sig_* functions
+//=====================================================================
+function sigSMC(tf){
+  const {highs, lows} = tf;
+  if(highs.length<2 || lows.length<2) return {dir:0, level:null};
+  const close = seriesGet(tf.rowsAsc,0).close;
+  const bullStructure = highs[0].price>highs[1].price && lows[0].price>lows[1].price;
+  const bearStructure = highs[0].price<highs[1].price && lows[0].price<lows[1].price;
+  // Sniper level: the exact structure point that just got broken — a
+  // classic "retest the break" entry instead of chasing the close.
+  if(bullStructure && close>highs[0].price) return {dir:1, level:highs[0].price};
+  if(bearStructure && close<lows[0].price) return {dir:-1, level:lows[0].price};
+  if(bearStructure && close>highs[0].price) return {dir:1, level:highs[0].price};
+  if(bullStructure && close<lows[0].price) return {dir:-1, level:lows[0].price};
+  return {dir:0, level:null};
+}
+function sigTrendlineBreakout(tf){
+  const {highs, lows, rowsAsc} = tf;
+  const close0 = seriesGet(rowsAsc,0).close, close1 = seriesGet(rowsAsc,1).close;
+  const now = Date.now();
+  if(highs.length>=2 && highs[1].time!==highs[0].time){
+    const slope = (highs[0].price-highs[1].price)/(highs[0].time-highs[1].time);
+    const projected = highs[0].price + slope*(now-highs[0].time);
+    // Sniper level: the trendline's own price right now — enter on the
+    // retest of the line, not the candle that already broke it.
+    if(close0>projected && close0>close1) return {dir:1, level:projected};
+  }
+  if(lows.length>=2 && lows[1].time!==lows[0].time){
+    const slope = (lows[0].price-lows[1].price)/(lows[0].time-lows[1].time);
+    const projected = lows[0].price + slope*(now-lows[0].time);
+    if(close0<projected && close0<close1) return {dir:-1, level:projected};
+  }
+  return {dir:0, level:null};
+}
+function sigCRT(h1Tf, entryTf){
+  if(!h1Tf || h1Tf.rowsAsc.length<2 || !entryTf || entryTf.rowsAsc.length<1) return {dir:0, level:null};
+  const defining = seriesGet(h1Tf.rowsAsc,1); // last CLOSED H1 candle
+  const rangeHigh = defining.high, rangeLow = defining.low;
+  const e0 = seriesGet(entryTf.rowsAsc,0);
+  // Sniper level: the swept range boundary itself — wait for price to
+  // revisit the liquidity grab, not the candle that already reclaimed it.
+  if(e0.low<rangeLow && e0.close>rangeLow) return {dir:1, level:rangeLow};
+  if(e0.high>rangeHigh && e0.close<rangeHigh) return {dir:-1, level:rangeHigh};
+  return {dir:0, level:null};
+}
+function sigPriceAction(tf){
+  if(tf.rowsAsc.length<3 || !tf.atr) return {dir:0, level:null};
+  const r0 = seriesGet(tf.rowsAsc,0), r1 = seriesGet(tf.rowsAsc,1);
+  const atr = tf.atr;
+  const {highs, lows} = tf;
+  const nearSwingLow  = lows.length>0  && Math.abs(r0.low  - lows[0].price)  < atr;
+  const nearSwingHigh = highs.length>0 && Math.abs(r0.high - highs[0].price) < atr;
+  const body0 = Math.abs(r0.close-r0.open);
+  const bull1=r1.close<r1.open, bull0=r0.close>r0.open, bear1=r1.close>r1.open, bear0=r0.close<r0.open;
+  // Sniper level: the swing point the pattern formed against — not the
+  // pattern candle's own close, which is already the far end of the move.
+  if(nearSwingLow && bull1 && bull0 && r0.open<=r1.close && r0.close>=r1.open) return {dir:1, level:lows[0].price};
+  if(nearSwingHigh && bear1 && bear0 && r0.open>=r1.close && r0.close<=r1.open) return {dir:-1, level:highs[0].price};
+  const lowerWick = Math.min(r0.open,r0.close)-r0.low, upperWick = r0.high-Math.max(r0.open,r0.close);
+  if(nearSwingLow && lowerWick>body0*2 && body0>0) return {dir:1, level:lows[0].price};
+  if(nearSwingHigh && upperWick>body0*2 && body0>0) return {dir:-1, level:highs[0].price};
+  return {dir:0, level:null};
+}
+function sigSupplyDemand(tf){
+  const atr = tf.atr; if(!atr || tf.rowsAsc.length<15) return {dir:0, level:null};
+  const rows = tf.rowsAsc;
+  for(let i=11;i>=2;i--){
+    const ri=seriesGet(rows,i), ri1=seriesGet(rows,i+1), rim1=seriesGet(rows,i-1), r0=seriesGet(rows,0);
+    const baseRange = Math.max(ri.high,ri1.high)-Math.min(ri.low,ri1.low);
+    if(baseRange > atr*InpConsolidationATR) continue;
+    const impulseBody = Math.abs(rim1.close-rim1.open);
+    if(impulseBody < atr*InpImpulseATR) continue;
+    const impulseUp = rim1.close>rim1.open;
+    const zoneHigh = Math.max(ri.high,ri1.high), zoneLow = Math.min(ri.low,ri1.low);
+    const touchedZone = r0.low<=zoneHigh && r0.high>=zoneLow;
+    if(!touchedZone) continue;
+    const body0 = Math.abs(r0.close-r0.open);
+    const lowerWick = Math.min(r0.open,r0.close)-r0.low, upperWick = r0.high-Math.max(r0.open,r0.close);
+    // Sniper level: the zone's own edge, not wherever price happens to be
+    // sitting after the confirming wick — get in as deep in the base as
+    // the zone allows, for the tightest possible stop.
+    if(impulseUp && lowerWick>body0) return {dir:1, level:zoneLow};
+    if(!impulseUp && upperWick>body0) return {dir:-1, level:zoneHigh};
+  }
+  return {dir:0, level:null};
+}
+function sigShadowHunter(d1Tf, entryTf){
+  if(!d1Tf || d1Tf.highs.length<1 || d1Tf.lows.length<1 || !entryTf) return {dir:0, level:null};
+  const h=d1Tf.highs[0].price, ht=d1Tf.highs[0].time, l=d1Tf.lows[0].price, lt=d1Tf.lows[0].time;
+  const range = h-l; if(range<=0) return {dir:0, level:null};
+  const legDir = ht>lt ? 1 : -1;
+  let zoneTop, zoneBottom;
+  if(legDir>0){ zoneTop = h-range*InpFibGoldenZoneMin; zoneBottom = h-range*InpFibGoldenZoneMax; }
+  else { zoneBottom = l+range*InpFibGoldenZoneMin; zoneTop = l+range*InpFibGoldenZoneMax; }
+  if(zoneTop<zoneBottom){ const t=zoneTop; zoneTop=zoneBottom; zoneBottom=t; }
+  const price = seriesGet(entryTf.rowsAsc,0).close;
+  if(price>zoneTop || price<zoneBottom) return {dir:0, level:null};
+  const zoneSignal = sigSupplyDemand(entryTf);
+  if(zoneSignal.dir!==legDir) return {dir:0, level:null};
+  // Sniper level: the far edge of the golden zone in the direction of the
+  // leg — the best price the zone itself offers, not today's touch price.
+  return {dir:legDir, level: legDir>0 ? zoneBottom : zoneTop};
+}
+function sigScalping(m1Tf, m5Tf){
+  if(!m1Tf || !m5Tf) return {dir:0, level:null};
+  const fastArr = emaSeries(m1Tf.closes,5), slowArr = emaSeries(m1Tf.closes,13);
+  const n = fastArr.length;
+  if(n<2 || fastArr[n-1]==null || fastArr[n-2]==null || slowArr[n-1]==null || slowArr[n-2]==null) return {dir:0, level:null};
+  const crossUp = fastArr[n-2]<=slowArr[n-2] && fastArr[n-1]>slowArr[n-1];
+  const crossDown = fastArr[n-2]>=slowArr[n-2] && fastArr[n-1]<slowArr[n-1];
+  const m5ema = emaSeries(m5Tf.closes,20);
+  const m = m5ema.length;
+  if(m<2 || m5ema[m-1]==null || m5ema[m-2]==null) return {dir:0, level:null};
+  const m5Up = m5ema[m-1]>m5ema[m-2], m5Down = m5ema[m-1]<m5ema[m-2];
+  const r0 = seriesGet(m1Tf.rowsAsc,0);
+  // Sniper level: the current M1 candle's own low/high — a shallow limit
+  // just behind the cross, since scalps don't have room for a deep retest.
+  if(crossUp && m5Up) return {dir:1, level:r0.low};
+  if(crossDown && m5Down) return {dir:-1, level:r0.high};
+  return {dir:0, level:null};
+}
+function sigNewsBreakout(m1Tf, bufferPts, pointSize){
+  if(!m1Tf || m1Tf.rowsAsc.length<16) return {dir:0, level:null};
+  const rows = m1Tf.rowsAsc;
+  const preSlice = rows.slice(rows.length-16, rows.length-1); // 15 bars before current
+  const rangeHigh = Math.max(...preSlice.map(r=>r.high)), rangeLow = Math.min(...preSlice.map(r=>r.low));
+  const buffer = bufferPts*pointSize;
+  const closeNow = seriesGet(rows,0).close;
+  // No pullback level here on purpose — news breakouts are traded as
+  // confirmed follow-through, not a retest (see the MARKET override below).
+  if(closeNow > rangeHigh+buffer) return {dir:1, level:rangeHigh+buffer};
+  if(closeNow < rangeLow-buffer) return {dir:-1, level:rangeLow-buffer};
+  return {dir:0, level:null};
+}
+
+//=====================================================================
+// HTF BIAS — matches GetHTFBias (H4+H1 EMA50/200 agreement)
+//=====================================================================
+function getHTFBias(h4Tf, h1Tf){
+  const biasFrom = (tf)=>{
+    if(!tf || tf.closes.length<200) return 0;
+    const f = emaLast(tf.closes,50), s = emaLast(tf.closes,200);
+    if(f==null || s==null) return 0;
+    return f>s ? 1 : (f<s ? -1 : 0);
+  };
+  const h4 = biasFrom(h4Tf), h1 = biasFrom(h1Tf);
+  return h4===h1 ? h4 : 0;
+}
+
+//=====================================================================
+// NEWS PHASE — mirrors GetNewsPhase / the tuned entry gating
+//=====================================================================
+function getNewsPhase(symbol, cfg){
+  if(!cfg.enabled || !cfg.eventTime) return {phase:0};
+  const base = symbol.toUpperCase();
+  if(!base.includes(cfg.currency.toUpperCase())) return {phase:0};
+  const now = Date.now();
+  const from = now - cfg.afterMin*60000, to = now + cfg.beforeMin*60000;
+  if(cfg.eventTime < from || cfg.eventTime > to) return {phase:0};
+  return { phase: now >= cfg.eventTime ? 2 : 1, eventTime: cfg.eventTime };
+}
+
+//=====================================================================
+// MASTER EVALUATOR — mirrors EvaluateSymbol exactly
+//=====================================================================
+function evaluateSymbol(symbol, styleKey, tfData, newsCfg, minConfluence, requireShadow){
+  if(newsCfg.enabled){
+    const {phase, eventTime} = getNewsPhase(symbol, newsCfg);
+    if(phase!==0){
+      if(phase===1) return {direction:0, source:'news_pending', detail:'Pre-release — standing aside, no real number to break out on yet.'};
+      if((Date.now()-eventTime)/1000 < newsCfg.delaySec)
+        return {direction:0, source:'news_delay', detail:'Post-release, waiting out the confirmation delay before reacting.'};
+      const key = symbol+'|'+eventTime;
+      if(newsTradedSet.has(key))
+        return {direction:0, source:'news_done', detail:'Already scanned this exact release for this symbol — one-shot.'};
+      const m1 = tfData['M1'];
+      if(!m1) return {direction:0, source:'news_nodata', detail:'M1 data unavailable for the breakout check.'};
+      const news = sigNewsBreakout(m1, newsCfg.bufferPts, pointSizeFor(symbol));
+      if(news.dir!==0){
+        newsTradedSet.add(key);
+        // Forced MARKET, not a pending order — by the time this fires,
+        // price has already confirmed through the breakout level, so the
+        // "sniper" level would sit behind current price like a pullback
+        // entry. That's not what this strategy is: it's a follow-through
+        // trade, taken now or not at all.
+        return {direction:news.dir, source:'news_breakout', forceMarket:true, detail:'Confirmed, buffered breakout of the pre-release range — traded as immediate follow-through, not a retest.'};
+      }
+      return {direction:0, source:'news_wait', detail:'In the post-release window, no clean breakout yet.'};
+    }
+  }
+
+  const bias = getHTFBias(tfData['H4'], tfData['H1']);
+  const asset = classifyAsset(symbol);
+  const style = STYLES[styleKey];
+  const breakdown = [];
+  let votesBuy=0, votesSell=0;
+
+  style.tfs.forEach(tfKey=>{
+    const tf = tfData[tfKey]; if(!tf) return;
+    const entries = [];
+    if(styleKey==='aggressive_scalping'){
+      entries.push(['scalping', sigScalping(tfData['M1'], tfData['M5'])]);
+      entries.push(['price_action', sigPriceAction(tf)]);
+    } else {
+      ASSET_STRATEGY_MAP[asset].forEach(id=>{
+        let res = {dir:0, level:null};
+        if(id==='smc') res = sigSMC(tf);
+        else if(id==='trendline_breakout') res = sigTrendlineBreakout(tf);
+        else if(id==='price_action') res = sigPriceAction(tf);
+        else if(id==='supply_demand') res = sigSupplyDemand(tf);
+        else if(id==='crt') res = sigCRT(tfData['H1'], tf);
+        entries.push([id, res]);
+      });
+      entries.push(['shadow_hunter', sigShadowHunter(tfData['D1'], tf)]);
+    }
+    entries.forEach(([id,res])=>{
+      breakdown.push({tf:tfKey, strategy:id, dir:res.dir, level:res.level});
+      if(res.dir>0) votesBuy++; else if(res.dir<0) votesSell++;
+    });
+  });
+
+  // Picks a sniper entry price for the winning direction: prefer a level
+  // from the entry timeframe (the most granular one in this style's set,
+  // closest to actual price action), fall back to any timeframe that
+  // agreed, and only fall back to a plain market entry if nothing in the
+  // whole scan produced a structural level at all.
+  function pickEntryLevel(dir){
+    const entryTfKey = style.tfs[style.tfs.length-1];
+    const onEntryTf = breakdown.filter(b=>b.tf===entryTfKey && b.dir===dir && b.level!=null);
+    if(onEntryTf.length) return onEntryTf[0].level;
+    const anyTf = breakdown.filter(b=>b.dir===dir && b.level!=null);
+    if(anyTf.length) return anyTf[0].level;
+    return null;
+  }
+
+  let finalDir = 0;
+  if(votesBuy>=minConfluence && votesBuy>votesSell && bias>=0) finalDir=1;
+  else if(votesSell>=minConfluence && votesSell>votesBuy && bias<=0) finalDir=-1;
+
+  if(finalDir!==0) return {direction:finalDir, source:'confluence', votesBuy, votesSell, bias, asset, breakdown, minConfluence, entryLevel:pickEntryLevel(finalDir)};
+
+  if(requireShadow && styleKey!=='aggressive_scalping'){
+    const entryTfKey = style.tfs[style.tfs.length-1];
+    const shadow = sigShadowHunter(tfData['D1'], tfData[entryTfKey]);
+    if(shadow.dir>0 && bias>=0) return {direction:shadow.dir, source:'shadow_hunter', votesBuy, votesSell, bias, asset, breakdown, minConfluence, entryLevel:shadow.level};
+    if(shadow.dir<0 && bias<=0) return {direction:shadow.dir, source:'shadow_hunter', votesBuy, votesSell, bias, asset, breakdown, minConfluence, entryLevel:shadow.level};
+  }
+  return {direction:0, source:'none', votesBuy, votesSell, bias, asset, breakdown, minConfluence};
+}
+
+//=====================================================================
+// CHART RENDERING (candles + level lines) — same canvas approach as before
+//=====================================================================
+function drawChart(rows){
+  const cv = document.getElementById('chart');
+  const ctx = cv.getContext('2d');
+  const W = cv.width = cv.clientWidth, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+  if(!rows || !rows.length) return;
+  const pad=10, top=20, bottom=20;
+  const highs=rows.map(r=>r.high), lows=rows.map(r=>r.low);
+  const max=Math.max(...highs), min=Math.min(...lows), range=(max-min)||1;
+  const cw=(W-2*pad)/rows.length;
+  const y = p => top + (H-top-bottom)*(1-(p-min)/range);
+  ctx.strokeStyle='#151D2B'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ const gy=top+(H-top-bottom)*i/4; ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+  rows.forEach((r,i)=>{
+    const x = pad+i*cw+cw/2;
+    const up = r.close>=r.open;
+    ctx.strokeStyle = up?'#2F8CFF':'#FF5470'; ctx.fillStyle = up?'#2F8CFF':'#FF5470'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,y(r.high)); ctx.lineTo(x,y(r.low)); ctx.stroke();
+    const bw = Math.max(cw*0.55,1.5), oy=y(r.open), cy=y(r.close);
+    ctx.fillRect(x-bw/2, Math.min(oy,cy), bw, Math.max(Math.abs(cy-oy),1));
+  });
+  const last = rows[rows.length-1];
+  document.getElementById('pxLabel').textContent = last.close.toFixed(last.close>50?2:5);
+  cv._scale = {min,max,range,top,bottom,H,W,pad,cw,count:rows.length};
+}
+function drawLevelsOnChart(entry, sl, tp1){
+  const cv = document.getElementById('chart'); const ctx = cv.getContext('2d');
+  const s = cv._scale; if(!s) return;
+  const y = p => s.top + (s.H-s.top-s.bottom)*(1-(p-s.min)/s.range);
+  const line = (price,color,label)=>{
+    const yy=y(price);
+    ctx.strokeStyle=color; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(s.W,yy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle=color; ctx.font='10px JetBrains Mono, monospace';
+    ctx.fillText(label+' '+price.toFixed(price>50?2:5), 6, yy-4);
+  };
+  line(entry,'#E8EDF2','ENTRY'); line(sl,'#FF5470','SL'); line(tp1,'#2F8CFF','TP1');
+}
+
+//=====================================================================
+// RADAR + LOG
+//=====================================================================
+function radarSVG(items){
+  const n=items.length; if(!n) return '';
+  const size=64,cx=32,cy=32,r=26;
+  const points = items.map((c,i)=>{ const ang=(Math.PI*2*i/n)-Math.PI/2; const rr=c.dir!==0?r:r*0.35; return [cx+rr*Math.cos(ang), cy+rr*Math.sin(ang)]; });
+  const poly = points.map(p=>p.join(',')).join(' ');
+  const dots = items.map((c,i)=>{ const ang=(Math.PI*2*i/n)-Math.PI/2; const x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang); const col = c.dir>0?'#2F8CFF':c.dir<0?'#FF5470':'#33415A'; return `<circle cx="${x}" cy="${y}" r="2.2" fill="${col}"/>`; }).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64"><polygon points="${poly}" fill="rgba(47,140,255,0.12)" stroke="#2F8CFF" stroke-width="1.2"/>${dots}</svg>`;
+}
+function logEntry(txt){
+  const el = document.getElementById('logArea');
+  const line = document.createElement('div'); line.textContent = '> ' + txt; el.prepend(line);
+}
+
+//=====================================================================
+// RISK CALC + SIGNAL RENDER
+//=====================================================================
+// Classifies the pending order type by comparing the sniper entry level
+// to current market price — the same rule MT5 itself uses: a buy above
+// market is a stop (breakout), a buy below market is a limit (pullback),
+// mirrored for sells. If forceMarket is set (news breakouts) or no
+// structural level was found at all, it's a plain market entry instead.
+function classifyOrder(direction, entryLevel, refPrice, atrVal, forceMarket){
+  if(forceMarket || entryLevel==null) return {type:'MARKET', price:refPrice};
+  const epsilon = (atrVal||0)*0.05; // levels this close to market aren't meaningfully "pending"
+  if(direction>0){
+    if(entryLevel > refPrice + epsilon) return {type:'BUY STOP', price:entryLevel};
+    if(entryLevel < refPrice - epsilon) return {type:'BUY LIMIT', price:entryLevel};
+    return {type:'MARKET', price:refPrice};
+  } else {
+    if(entryLevel < refPrice - epsilon) return {type:'SELL STOP', price:entryLevel};
+    if(entryLevel > refPrice + epsilon) return {type:'SELL LIMIT', price:entryLevel};
+    return {type:'MARKET', price:refPrice};
+  }
+}
+function computeLevels(direction, entryPrice, atrVal, styleKey){
+  const s = STYLES[styleKey];
+  const slDist = atrVal*s.slMult;
+  let entry, sl, tp1, tp2;
+  if(direction>0){ entry=entryPrice; sl=entry-slDist; const risk=entry-sl; tp1=entry+risk*s.rr; tp2=entry+risk*s.rr*1.5; }
+  else { entry=entryPrice; sl=entry+slDist; const risk=sl-entry; tp1=entry-risk*s.rr; tp2=entry-risk*s.rr*1.5; }
+  return {entry, sl, tp1, tp2};
+}
+
+function sourceLabel(source){
+  return {
+    confluence:'Confluence Vote', shadow_hunter:'Shadow Hunter / Zero Float', news_breakout:'News Breakout',
+    news_pending:'News — Pre-Release', news_delay:'News — Confirmation Delay', news_done:'News — Already Scanned',
+    news_wait:'News — Awaiting Breakout', news_nodata:'News — No Data', none:'No Signal'
+  }[source] || source;
+}
+
+function renderSignal(result, meta){
+  const balance = +document.getElementById('balance').value || 1000;
+  const riskPct = +document.getElementById('riskPct').value || 1;
+  const riskAmt = balance*riskPct/100;
+  const dirClass = result.direction>0?'dir-buy':result.direction<0?'dir-sell':'dir-none';
+  const dirLabel = result.direction>0?'BUY':result.direction<0?'SELL':'NONE';
+
+  let levelsHtml = '', riskHtml = '', orderTypeBadge = '';
+  if(result.direction!==0 && meta.refPrice && meta.atr){
+    const order = classifyOrder(result.direction, result.entryLevel, meta.refPrice, meta.atr, result.forceMarket);
+    const lv = computeLevels(result.direction, order.price, meta.atr, activeStyle);
+    const dp = v => v>50 ? v.toFixed(2) : v.toFixed(5);
+    const slDist = Math.abs(lv.entry-lv.sl);
+    const pip = meta.symbol.includes('JPY') ? 0.01 : 0.0001;
+    const slPips = slDist/pip;
+    const pipValuePerStdLot = meta.symbol.startsWith('XAU') ? 1 : 10;
+    const lots = slPips>0 ? (riskAmt/(slPips*pipValuePerStdLot)) : 0;
+    const myLot = +document.getElementById('myLotSize').value || 0;
+    const myRiskAmt = myLot*slPips*pipValuePerStdLot;
+    const myRiskPct = balance>0 ? (myRiskAmt/balance*100) : 0;
+    const isPending = order.type!=='MARKET';
+    orderTypeBadge = `<span class="badge ${result.direction>0?'up':'down'}" style="font-weight:700;">${order.type}</span>`;
+    levelsHtml = `<div class="levels">
+      <div class="lvl entry"><div class="l">${isPending?order.type:'Entry (Market)'}</div><div class="v">${dp(lv.entry)}</div></div>
+      <div class="lvl sl"><div class="l">Stop Loss</div><div class="v">${dp(lv.sl)}</div></div>
+      <div class="lvl tp"><div class="l">TP1</div><div class="v">${dp(lv.tp1)}</div></div>
+      <div class="lvl tp"><div class="l">TP2</div><div class="v">${dp(lv.tp2)}</div></div>
+    </div>`;
+    if(isPending){
+      levelsHtml += `<div class="hint" style="margin:-6px 0 12px;">Place this as a <b>${order.type}</b> pending order at ${dp(lv.entry)} — don't enter at the current market price (${dp(meta.refPrice)}). SL/TP above are set relative to the pending price, not market.</div>`;
+    }
+    riskHtml = `<div class="risk-out">
+      <div class="risk-box"><div class="l">Risk Amount (${riskPct}%)</div><div class="v">$${riskAmt.toFixed(2)}</div></div>
+      <div class="risk-box"><div class="l">Suggested Size</div><div class="v">${lots.toFixed(2)} lots</div></div>
+      <div class="risk-box"><div class="l">Your ${myLot.toFixed(2)} Lot Risk</div><div class="v">$${myRiskAmt.toFixed(2)} (${myRiskPct.toFixed(2)}%)</div></div>
+    </div>`;
+    drawLevelsOnChart(lv.entry, lv.sl, lv.tp1);
+  }
+
+  let badges = orderTypeBadge + `<span class="badge">${meta.styleLabel}</span>`;
+  if(result.asset) badges += `<span class="badge">${result.asset.toUpperCase()}</span>`;
+  if(result.bias!==undefined) badges += `<span class="badge ${result.bias>0?'up':result.bias<0?'down':''}">H4+H1 Bias: ${result.bias>0?'Bullish':result.bias<0?'Bearish':'Conflicting'}</span>`;
+  if(result.votesBuy!==undefined) badges += `<span class="badge">Votes ${result.votesBuy} buy / ${result.votesSell} sell (need ${result.minConfluence})</span>`;
+  badges += `<span class="badge ${result.source==='news_pending'||result.source==='news_delay'?'warn':''}">${sourceLabel(result.source)}</span>`;
+
+  let breakdownHtml = '';
+  if(result.breakdown && result.breakdown.length){
+    const byTf = {};
+    result.breakdown.forEach(b=>{ (byTf[b.tf]=byTf[b.tf]||[]).push(b); });
+    breakdownHtml = '<div class="bd-group">' + Object.entries(byTf).map(([tfKey,items])=>{
+      const rows = items.map(b=>{
+        const m = STRAT_META[b.strategy];
+        const cls = b.dir>0?'up':b.dir<0?'down':'flat';
+        const rowCls = b.dir>0?'pass-up':b.dir<0?'pass-down':'flat';
+        const icon = b.dir>0?'B':b.dir<0?'S':'-';
+        return `<div class="cf-row ${rowCls}"><span class="cf-icon ${cls}">${icon}</span>${m.name}</div>`;
+      }).join('');
+      return `<div class="tf-label">${tfKey}</div><div class="confluences">${rows}</div>`;
+    }).join('') + '</div>';
+  }
+
+  const html = `<div class="signal-card">
+    <div class="signal-head">
+      <div class="dir-badge ${dirClass}">${dirLabel}</div>
+      <div class="conf-wrap">${result.breakdown&&result.breakdown.length?radarSVG(result.breakdown):''}</div>
+    </div>
+    <div class="badge-row">${badges}</div>
+    ${levelsHtml}
+    ${riskHtml}
+    ${breakdownHtml}
+    <div class="notes">${result.detail||'Full multi-timeframe confluence scan — matches the Armageddon EA EvaluateSymbol logic exactly, run client-side against live data instead of MT5.'}</div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="speakSignal()">Read Signal Aloud</button>
+    </div>
+  </div>`;
+  document.getElementById('signalArea').innerHTML = html;
+  window._lastSignal = { direction:dirLabel, source:sourceLabel(result.source), symbol:meta.symbol, style:meta.styleLabel };
+  logEntry(`${new Date().toLocaleTimeString()} - ${meta.symbol} - ${meta.styleLabel} - ${dirLabel} - ${sourceLabel(result.source)}`);
+}
+
+//=====================================================================
+// LIVE SCAN
+//=====================================================================
+function requiredTFsFor(styleKey, newsEnabled){
+  const style = STYLES[styleKey];
+  const set = new Set([...style.tfs, 'H4','H1']); // bias always needed
+  if(styleKey!=='aggressive_scalping') set.add('D1'); // shadow hunter
+  if(styleKey==='aggressive_scalping') set.add('M5'); // Sig_Scalping needs M1+M5
+  if(newsEnabled) set.add('M1'); // Sig_NewsBreakout is hardcoded to M1
+  return [...set];
+}
+
+async function runLiveScan(){
+  const overlay = document.getElementById('scanOverlay');
+  const scanBtn = document.getElementById('scanBtn');
+  const symbol = document.getElementById('symbol').value;
+  if(!symbol){ document.getElementById('signalArea').innerHTML = `<div class="warn-box"><b>No symbol.</b> Synthetics have no live feed here — use Screenshot Analysis instead.</div>`; return; }
+  overlay.style.display='flex'; scanBtn.disabled=true;
+  document.getElementById('liveDot').classList.remove('live');
+  document.getElementById('symLabel').textContent = symbol + ' · ' + STYLES[activeStyle].label;
+
+  const newsCfg = {
+    enabled: document.getElementById('newsEnabled').checked,
+    currency: document.getElementById('newsCurrency').value.trim() || 'USD',
+    eventTime: document.getElementById('newsTime').value ? new Date(document.getElementById('newsTime').value).getTime() : null,
+    beforeMin: +document.getElementById('newsBefore').value || 15,
+    afterMin: +document.getElementById('newsAfter').value || 30,
+    delaySec: +document.getElementById('newsDelay').value || 60,
+    bufferPts: +document.getElementById('newsBuffer').value || 50
+  };
+  const minConfluence = +document.getElementById('minConfluence').value || 2;
+  const requireShadow = document.getElementById('requireShadow').checked;
+
+  try{
+    const tfKeys = requiredTFsFor(activeStyle, newsCfg.enabled);
+    const tfData = {};
+    for(const tfKey of tfKeys){
+      document.getElementById('scanTxt').textContent = `FETCHING ${tfKey}…`;
+      const rows = await fetchTFRows(symbol, tfKey);
+      tfData[tfKey] = buildTF(rows);
+    }
+    document.getElementById('liveDot').classList.add('live');
+    document.getElementById('liveStatus').textContent = 'Feed connected';
+
+    const chartTfKey = STYLES[activeStyle].tfs[STYLES[activeStyle].tfs.length-1];
+    drawChart(tfData[chartTfKey].rowsAsc);
+
+    document.getElementById('scanTxt').textContent = 'RUNNING CONFLUENCE ENGINE…';
+    await new Promise(r=>setTimeout(r,600));
+
+    const result = evaluateSymbol(symbol, activeStyle, tfData, newsCfg, minConfluence, requireShadow);
+    const refPrice = seriesGet(tfData[chartTfKey].rowsAsc,0).close;
+    const atrTf = tfData[STYLES[activeStyle].atrTf] || tfData[chartTfKey];
+    renderSignal(result, { symbol, styleLabel: STYLES[activeStyle].label, refPrice, atr: atrTf.atr });
+  }catch(err){
+    document.getElementById('liveStatus').textContent = 'Error';
+    document.getElementById('signalArea').innerHTML = `<div class="warn-box"><b>Scan failed:</b> ${err.message}</div>`;
+  }finally{
+    overlay.style.display='none'; scanBtn.disabled=false;
+  }
+}
+
+function toggleAutoScan(){
+  const btn = document.getElementById('autoBtn');
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; btn.textContent='Auto-Scan: Off'; }
+  else { btn.textContent='Auto-Scan: On'; runLiveScan(); autoTimer=setInterval(runLiveScan, 60000); }
+}
+
+//=====================================================================
+// SCREENSHOT AI ANALYSIS (unchanged approach — Claude vision call)
+//=====================================================================
+let uploadedImageB64=null, uploadedMime=null, uploadedDataUrl=null;
+document.getElementById('dropZone').onclick = ()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange = (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  uploadedMime = f.type;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    uploadedDataUrl = reader.result; uploadedImageB64 = reader.result.split(',')[1];
+    const img = document.getElementById('preview'); img.src = reader.result; img.style.display='block';
+    document.getElementById('scanImgBtn').disabled = false;
+  };
+  reader.readAsDataURL(f);
+};
+
+async function analyzeScreenshot(){
+  if(!uploadedImageB64) return;
+  const apiKey = document.getElementById('anthropicKey').value.trim();
+  if(!apiKey){
+    document.getElementById('signalArea').innerHTML = `<div class="warn-box"><b>No Anthropic API key.</b> Paste one from console.anthropic.com into the Screenshot Analysis panel first — that's what "failed to fetch" meant, the request had nothing to authenticate with.</div>`;
+    return;
+  }
+  const btn = document.getElementById('scanImgBtn');
+  btn.disabled=true; btn.textContent='Analyzing…';
+  const stratId = document.getElementById('screenshotStrategy').value;
+  const stratMeta = STRAT_META[stratId];
+  const prompt = `You are a forex/CFD chart structure analyst working for the Armageddon Scanner. Analyze the attached chart screenshot strictly using ${stratMeta.name} methodology (${stratMeta.desc}). Base every observation only on what is visibly present in the image (candle shapes, visible swing highs/lows, drawn levels if any). Also estimate normalized coordinates (fractions 0-1, 0,0 = top-left, 1,1 = bottom-right) for where key levels and structure points visually sit, for an annotation overlay — best visual estimate, not precise pixel measurement. Respond with ONLY raw JSON, no markdown fences, no prose outside the JSON, in this exact shape:
+{"direction":"BUY|SELL|NONE","confidence":0-100 integer,"confluences":[{"name":"short label","pass":true|false}],"entry_note":"price/level description as text","sl_note":"stop level description","tp_note":"target level description","entry_y":0.0-1.0 or null,"sl_y":0.0-1.0 or null,"tp_y":0.0-1.0 or null,"zones":[{"label":"Demand Zone|Supply Zone|Order Block|etc","x1":0.0-1.0,"y1":0.0-1.0,"x2":0.0-1.0,"y2":0.0-1.0}],"swing_points":[{"x":0.0-1.0,"y":0.0-1.0,"label":"BOS|CHOCH|HH|HL|LH|LL|Sweep|etc"}],"notes":"2-3 sentence rationale grounded only in what is visible, plus a caveat that exact prices/coordinates are visual estimates"}`;
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1000,
+        messages:[{ role:"user", content:[
+          {type:"image", source:{type:"base64", media_type: uploadedMime||"image/png", data: uploadedImageB64}},
+          {type:"text", text: prompt}
+        ]}]
+      })
+    });
+    if(!response.ok){
+      const errBody = await response.json().catch(()=>null);
+      throw new Error(errBody?.error?.message || `Anthropic API returned ${response.status}`);
+    }
+    const data = await response.json();
+    const textBlock = (data.content||[]).map(c=>c.text||'').join('');
+    const clean = textBlock.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    renderImageSignal(parsed, stratMeta.name);
+    drawAnnotatedChart(parsed, uploadedDataUrl);
+  }catch(err){
+    document.getElementById('signalArea').innerHTML = `<div class="warn-box"><b>Analysis failed:</b> ${err.message}</div>`;
+  }finally{
+    btn.disabled=false; btn.textContent='Analyze Screenshot';
+  }
+}
+document.getElementById('scanImgBtn').onclick = analyzeScreenshot;
+
+function renderImageSignal(parsed, strategyName){
+  const dirClass = parsed.direction==='BUY'?'dir-buy':parsed.direction==='SELL'?'dir-sell':'dir-none';
+  const confColor = parsed.confidence>=70?'var(--cyan)':parsed.confidence>=45?'var(--amber)':'var(--red)';
+  const confluences = (parsed.confluences||[]).map(c=>({dir:c.pass?1:0}));
+  const html = `<div class="signal-card">
+    <div class="signal-head">
+      <div class="dir-badge ${dirClass}">${parsed.direction} - ${strategyName} (Screenshot AI)</div>
+      <div class="conf-wrap"><div><div class="conf-label">Confidence</div><div class="conf-num" style="color:${confColor}">${parsed.confidence}%</div></div>${confluences.length?radarSVG(confluences):''}</div>
+    </div>
+    <div class="levels">
+      <div class="lvl entry"><div class="l">Entry</div><div class="v" style="font-size:12px;">${parsed.entry_note||'—'}</div></div>
+      <div class="lvl sl"><div class="l">Stop Loss</div><div class="v" style="font-size:12px;">${parsed.sl_note||'—'}</div></div>
+      <div class="lvl tp"><div class="l">Target</div><div class="v" style="font-size:12px;">${parsed.tp_note||'—'}</div></div>
+      <div class="lvl"><div class="l">Source</div><div class="v" style="font-size:12px;">Image</div></div>
+    </div>
+    <div class="confluences">${(parsed.confluences||[]).map(c=>`<div class="cf-row ${c.pass?'pass-up':'flat'}"><span class="cf-icon ${c.pass?'up':'flat'}">${c.pass?'Y':'-'}</span>${c.name}</div>`).join('')}</div>
+    <div class="notes">${parsed.notes||''} <br><em>Screenshot analysis reads visual structure only — always confirm exact prices on your live platform before acting.</em></div>
+    <div id="annotatedWrap" style="display:none;margin-top:14px;">
+      <div class="hint" style="margin-bottom:8px;">Strategy lines drawn from the AI's visual read of your screenshot — an estimate, not a precise chart reading.</div>
+      <canvas id="annotatedCanvas" style="width:100%;border-radius:8px;border:1px solid var(--line);display:block;"></canvas>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn btn-ghost" onclick="downloadAnnotated()">Download Chart</button>
+        <button class="btn btn-primary" onclick="shareAnnotated()">Share Result</button>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:14px;"><button class="btn btn-ghost" onclick="speakSignal()">Read Signal Aloud</button></div>
+  </div>`;
+  document.getElementById('signalArea').innerHTML = html;
+  window._lastSignal = { direction:parsed.direction, source:strategyName+' (Screenshot AI)', notes:parsed.notes };
+  logEntry(`${new Date().toLocaleTimeString()} - ${strategyName} (image) - ${parsed.direction} - conf ${parsed.confidence}%`);
+}
+
+function drawAnnotatedChart(parsed, dataUrl){
+  if(!dataUrl) return;
+  const img = new Image();
+  img.onload = ()=>{
+    const maxW=760, scale=Math.min(1,maxW/img.naturalWidth);
+    const w=Math.round(img.naturalWidth*scale), h=Math.round(img.naturalHeight*scale);
+    const canvas = document.getElementById('annotatedCanvas'); if(!canvas) return;
+    canvas.width=w; canvas.height=h;
+    const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+    (parsed.zones||[]).forEach(z=>{
+      if([z.x1,z.y1,z.x2,z.y2].some(v=>v==null)) return;
+      const x1=z.x1*w,x2=z.x2*w,y1=z.y1*h,y2=z.y2*h;
+      const isSupply = (z.label||'').toLowerCase().includes('supply');
+      ctx.fillStyle = isSupply?'rgba(255,84,112,0.16)':'rgba(47,140,255,0.16)';
+      ctx.strokeStyle = isSupply?'#FF5470':'#2F8CFF'; ctx.lineWidth=1.5;
+      const rx=Math.min(x1,x2), ry=Math.min(y1,y2), rw=Math.abs(x2-x1), rh=Math.abs(y2-y1);
+      ctx.fillRect(rx,ry,rw,rh); ctx.strokeRect(rx,ry,rw,rh);
+      ctx.fillStyle='#E8EDF2'; ctx.font='11px JetBrains Mono, monospace'; ctx.fillText(z.label||'Zone', rx+4, ry+13);
+    });
+    const hline = (yFrac,color,label)=>{
+      if(yFrac==null) return; const yy=yFrac*h;
+      ctx.strokeStyle=color; ctx.setLineDash([5,4]); ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(w,yy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle=color; ctx.font='bold 11px JetBrains Mono, monospace'; ctx.fillText(label,6,yy-4);
+    };
+    hline(parsed.entry_y,'#E8EDF2','ENTRY'); hline(parsed.sl_y,'#FF5470','SL'); hline(parsed.tp_y,'#2F8CFF','TP');
+    (parsed.swing_points||[]).forEach(p=>{
+      if(p.x==null||p.y==null) return;
+      const x=p.x*w,y=p.y*h;
+      ctx.fillStyle='#FF3B5C'; ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#E8EDF2'; ctx.font='10px JetBrains Mono, monospace'; ctx.fillText(p.label||'', x+6, y-6);
+    });
+    const wrap = document.getElementById('annotatedWrap'); if(wrap) wrap.style.display='block';
+  };
+  img.src = dataUrl;
+}
+function downloadAnnotated(){
+  const canvas = document.getElementById('annotatedCanvas'); if(!canvas) return;
+  const a = document.createElement('a'); a.download='armageddon-scanner-signal.png'; a.href=canvas.toDataURL('image/png'); a.click();
+}
+function shareAnnotated(){
+  const canvas = document.getElementById('annotatedCanvas'); if(!canvas) return;
+  canvas.toBlob(async (blob)=>{
+    const file = new File([blob],'armageddon-scanner-signal.png',{type:'image/png'});
+    const text = shareText();
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:'Armageddon Scanner Signal', text}); }catch(e){}
+    } else { downloadAnnotated(); alert("Direct sharing isn't supported on this browser/device — the annotated chart was downloaded instead."); }
+  }, 'image/png');
+}
+function shareText(){
+  if(!window._lastSignal) return '';
+  const s = window._lastSignal;
+  return `${s.symbol||''} ${s.style||''} - ${s.direction} via ${s.source} - Armageddon Scanner. Not financial advice.`;
+}
+function speakSignal(){
+  if(!window._lastSignal) return;
+  const s = window._lastSignal;
+  const txt = `${s.symbol||''} signal: ${s.direction}, source ${s.source}. ${s.notes||''}`;
+  const u = new SpeechSynthesisUtterance(txt); u.rate=1; u.pitch=1;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+const voiceBtn = document.getElementById('voiceToggle');
+voiceBtn.onclick = ()=>{
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ alert('Voice recognition is not supported in this browser.'); return; }
+  if(voiceOn){ recognizer && recognizer.stop(); voiceOn=false; voiceBtn.classList.remove('on'); return; }
+  recognizer = new SR(); recognizer.continuous=true; recognizer.interimResults=false;
+  recognizer.onresult = (e)=>{
+    const said = e.results[e.results.length-1][0].transcript.toLowerCase();
+    if(said.includes('scan')) runLiveScan();
+    else if(said.includes('read')||said.includes('signal')) speakSignal();
+  };
+  recognizer.onend = ()=>{ if(voiceOn) recognizer.start(); };
+  recognizer.start(); voiceOn=true; voiceBtn.classList.add('on');
+};
+
+drawChart([]);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

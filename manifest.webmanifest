@@ -1,0 +1,16 @@
+{
+  "name": "Armageddon Scanner",
+  "short_name": "Armageddon",
+  "description": "Multi-strategy confluence chart scanner and AI screenshot analyzer — the analysis engine behind the Armageddon Forex Robot, standalone and manual.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070A10",
+  "theme_color": "#070A10",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }
+  ]
+}
